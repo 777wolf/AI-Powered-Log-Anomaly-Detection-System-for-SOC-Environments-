@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SOC Anomaly Detection — Report</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#fff; color:#000; font-family:'Segoe UI',sans-serif; font-size:12px; }
+
+    .cover {
+      text-align:center; padding:60px 40px;
+      border-bottom:3px solid #1a1a2e; margin-bottom:30px;
+    }
+    .cover h1 { font-size:22px; font-weight:700; color:#1a1a2e; margin-bottom:8px; }
+    .cover p  { font-size:12px; color:#555; margin-top:4px; }
+
+    .section { padding:20px 40px; break-inside:avoid; page-break-inside:avoid; }
+    .section h2 {
+      font-size:14px; font-weight:700; color:#1a1a2e;
+      border-left:4px solid #1a1a2e; padding-left:10px;
+      margin-bottom:14px; text-transform:uppercase; letter-spacing:1px;
+    }
+
+    .stat-row { display:flex; gap:12px; margin-bottom:20px; }
+    .stat-box {
+      flex:1; border:1px solid #ddd; border-radius:8px;
+      padding:14px; text-align:center;
+    }
+    .stat-box .val { font-size:28px; font-weight:700; }
+    .stat-box .lbl { font-size:10px; color:#666; text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+    .red    { color:#dc2626; }
+    .orange { color:#d97706; }
+    .green  { color:#16a34a; }
+    .blue   { color:#2563eb; }
+    .purple { color:#7c3aed; }
+
+    .status-row { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+    .status-box {
+      flex:1; min-width:120px; border:1px solid #ddd;
+      border-radius:6px; padding:10px 12px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .sdot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .sdot.on  { background:#16a34a; }
+    .sdot.off { background:#dc2626; }
+    .sdot.rdy { background:#2563eb; }
+    .sl { font-size:11px; font-weight:700; }
+    .ss { font-size:9px; color:#666; }
+
+    .chart-wrap {
+      border:1px solid #eee; border-radius:8px;
+      padding:14px; margin-bottom:16px;
+      break-inside:avoid; page-break-inside:avoid;
+    }
+    .chart-wrap h3 { font-size:12px; font-weight:700; margin-bottom:10px; color:#333; }
+
+    table { width:100%; border-collapse:collapse; font-size:11px; }
+    thead th {
+      background:#1a1a2e; color:#fff; padding:8px 10px;
+      text-align:left; font-size:10px; text-transform:uppercase;
+      letter-spacing:0.8px;
+    }
+    tbody tr:nth-child(even) { background:#f8f8f8; }
+    tbody td { padding:7px 10px; border-bottom:1px solid #eee; }
+    .bh {
+      display:inline-block; padding:2px 7px; border-radius:4px;
+      font-size:9px; font-weight:700;
+    }
+    .bh.H { background:#fee2e2; color:#dc2626; }
+    .bh.M { background:#fef3c7; color:#d97706; }
+    .dot2 { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:3px; }
+    .dr { background:#dc2626; }
+    .dg { background:#16a34a; }
+
+    .footer {
+      text-align:center; font-size:10px; color:#888;
+      border-top:1px solid #ddd; padding:16px 40px;
+      margin-top:20px;
+    }
+
+    @media print {
+      * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+      .no-print { display:none !important; }
+      .section { break-inside:avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- PRINT BUTTON (hidden when printing) -->
+<div class="no-print" style="position:fixed;top:16px;right:16px;z-index:999;display:flex;gap:8px;">
+  <button onclick="window.print()" style="padding:10px 20px;background:#1a1a2e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;">
+    🖨 Print / Save PDF
+  </button>
+  <button onclick="window.close()" style="padding:10px 16px;background:#eee;border:none;border-radius:8px;cursor:pointer;font-size:13px;">
+    Close
+  </button>
+</div>
+
+<!-- COVER -->
+<div class="cover">
+  <h1>SOC Anomaly Detection — Report</h1>
+  <p>AI-Powered Log Analysis &nbsp;·&nbsp; Isolation Forest + LOF &nbsp;·&nbsp; DSEU BCA Dissertation 2026</p>
+  <p style="margin-top:8px;" id="cover-time"></p>
+</div>
+
+<!-- OVERVIEW -->
+<div class="section">
+  <h2>Overview</h2>
+  <div class="stat-row">
+    <div class="stat-box"><div class="val red"   id="p-high">--</div><div class="lbl">High Alerts</div></div>
+    <div class="stat-box"><div class="val orange" id="p-med">--</div><div class="lbl">Medium Alerts</div></div>
+    <div class="stat-box"><div class="val green"  id="p-norm">--</div><div class="lbl">Normal Windows</div></div>
+    <div class="stat-box"><div class="val blue"   id="p-total">--</div><div class="lbl">Total Windows</div></div>
+    <div class="stat-box"><div class="val purple" id="p-rate">--</div><div class="lbl">Detection Rate</div></div>
+  </div>
+</div>
+
+<!-- SYSTEM STATUS -->
+<div class="section">
+  <h2>System Status</h2>
+  <div class="status-row" id="p-status"></div>
+</div>
+
+<!-- CHARTS -->
+<div class="section">
+  <h2>Anomaly Score Timeline</h2>
+  <div class="chart-wrap">
+    <div id="p-timeline" style="height:280px;"></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Login Activity</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div class="chart-wrap">
+      <h3>Login Timeline (Hourly)</h3>
+      <div id="p-login" style="height:220px;"></div>
+    </div>
+    <div class="chart-wrap">
+      <h3>Confidence Distribution</h3>
+      <div id="p-pie" style="height:220px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Attack Indicators</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div class="chart-wrap">
+      <h3>Failed Login Rate — Event 4625</h3>
+      <div id="p-failed" style="height:200px;"></div>
+    </div>
+    <div class="chart-wrap">
+      <h3>Event ID Breakdown</h3>
+      <div id="p-events" style="height:200px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ALERT TABLE -->
+<div class="section">
+  <h2>Anomaly Alert Log</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Time Window</th><th>Confidence</th>
+        <th>Failed Logins</th><th>Login Success</th>
+        <th>Score</th><th>IF Model</th><th>LOF Model</th>
+      </tr>
+    </thead>
+    <tbody id="p-tbody"></tbody>
+  </table>
+</div>
+
+<div class="footer">
+  AI-Powered Log Anomaly Detection System &nbsp;·&nbsp;
+  Tushar Kumar Swami (Wolf) &nbsp;·&nbsp; BCA Final Year &nbsp;·&nbsp; DSEU 2026
+</div>
+
+<script>
+  const cfg = { responsive:true, displayModeBar:false };
+
+  function L() {
+    return {
+      paper_bgcolor:'#ffffff', plot_bgcolor:'#ffffff',
+      font:{ color:'#333', size:10, family:'Segoe UI,sans-serif' },
+      xaxis:{ gridcolor:'#eee', zerolinecolor:'#ddd', linecolor:'#ddd' },
+      yaxis:{ gridcolor:'#eee', zerolinecolor:'#ddd', linecolor:'#ddd', rangemode:'tozero' },
+      margin:{ t:10, r:10, b:44, l:52 }, showlegend:false
+    };
+  }
+
+  document.getElementById('cover-time').textContent =
+    'Generated: ' + new Date().toLocaleString();
+
+  // SUMMARY
+  fetch('/api/summary').then(r=>r.json()).then(d=>{
+    document.getElementById('p-high').textContent   = d.high;
+    document.getElementById('p-med').textContent    = d.medium;
+    document.getElementById('p-norm').textContent   = d.normal;
+    document.getElementById('p-total').textContent  = d.total;
+    document.getElementById('p-rate').textContent   = d.detection_rate+'%';
+
+    Plotly.newPlot('p-pie',[{
+      values:[d.high,d.medium,d.normal],
+      labels:['HIGH','MEDIUM','NORMAL'],
+      type:'pie', hole:0.5,
+      marker:{colors:['#dc2626','#d97706','#16a34a']},
+      textinfo:'label+percent'
+    }],{ ...L(), margin:{t:10,r:10,b:10,l:10} },cfg);
+  });
+
+  // STATUS
+  fetch('/api/status').then(r=>r.json()).then(d=>{
+    const items = [
+      { label:'Windows 10 VM',  sub:'192.168.56.102', state: d.vm_online    ? 'on':'off' },
+      { label:'Splunk Web',     sub:':8000',          state: d.splunk_web   ? 'on':'off' },
+      { label:'Splunk HEC',     sub:':8088',          state: d.splunk_hec   ? 'on':'off' },
+      { label:'Raw Logs',       sub: d.raw_time||'—', state: d.raw_logs     ? 'rdy':'off' },
+      { label:'ML Model',       sub: d.results_time||'—', state: d.model_ready? 'rdy':'off' },
+    ];
+    document.getElementById('p-status').innerHTML = items.map(i=>`
+      <div class="status-box">
+        <div class="sdot ${i.state}"></div>
+        <div><div class="sl">${i.label}</div><div class="ss">${i.sub}</div></div>
+      </div>`).join('');
+  });
+
+  // CHARTS
+  fetch('/api/timeline').then(r=>r.json()).then(data=>{
+    const T = data.map(d=>new Date(d.time));
+    const S = data.map(d=>d.combined_score);
+    const col = data.map(d=>d.confidence==='HIGH'?'#dc2626':d.confidence==='MEDIUM'?'#d97706':'#16a34a');
+
+    Plotly.newPlot('p-timeline',[
+      { x:T, y:S, type:'scatter', mode:'lines', line:{color:'#ddd',width:1}, hoverinfo:'skip' },
+      { x:T, y:S, type:'scatter', mode:'markers',
+        marker:{color:col,size:7,line:{width:1,color:'#fff'}},
+        text:data.map(d=>d.confidence),
+        hovertemplate:'<b>%{x|%b %d %H:%M}</b><br>Score: %{y:.4f}<br>%{text}<extra></extra>'
+      }
+    ],{
+      ...L(),
+      xaxis:{...L().xaxis,type:'date',tickformat:'%b %d'},
+      yaxis:{...L().yaxis,title:{text:'Anomaly Score'},rangemode:'normal'}
+    },cfg);
+
+    Plotly.newPlot('p-failed',[{
+      x:T, y:data.map(d=>d.failed_logins), type:'bar',
+      marker:{color:col},
+      hovertemplate:'<b>%{x|%b %d %H:%M}</b><br>%{y:.1%}<extra></extra>'
+    }],{
+      ...L(),
+      xaxis:{...L().xaxis,type:'date',tickformat:'%b %d'},
+      yaxis:{...L().yaxis,title:{text:'Failed Login Rate'}}
+    },cfg);
+  });
+
+  fetch('/api/login_timeline').then(r=>r.json()).then(data=>{
+    const H = data.map(d=>new Date(d.hour));
+    Plotly.newPlot('p-login',[
+      { x:H, y:data.map(d=>d.success), type:'bar', name:'Success',
+        marker:{color:'rgba(22,163,74,0.75)'} },
+      { x:H, y:data.map(d=>d.failed),  type:'bar', name:'Failed',
+        marker:{color:'rgba(220,38,38,0.8)'} }
+    ],{
+      ...L(), barmode:'group', showlegend:true,
+      legend:{orientation:'h',y:1.1,font:{size:10}},
+      xaxis:{...L().xaxis,type:'date',tickformat:'%b %d'}
+    },cfg);
+  });
+
+  fetch('/api/event_breakdown').then(r=>r.json()).then(data=>{
+    const col = data.map(d=>d.event_id===4625?'#dc2626':d.event_id===4688?'#7c3aed':d.event_id===4624?'#16a34a':d.event_id===4672?'#d97706':'#2563eb');
+    Plotly.newPlot('p-events',[{
+      x:data.map(d=>d.label), y:data.map(d=>d.count), type:'bar',
+      marker:{color:col},
+      text:data.map(d=>d.count.toLocaleString()), textposition:'outside'
+    }],{
+      ...L(),
+      xaxis:{...L().xaxis,tickangle:-15},
+      yaxis:{...L().yaxis,title:{text:'Count'}}
+    },cfg);
+  });
+
+  // ALERT TABLE
+  fetch('/api/alerts').then(r=>r.json()).then(alerts=>{
+    document.getElementById('p-tbody').innerHTML = alerts.map((a,i)=>`
+      <tr>
+        <td>${i+1}</td>
+        <td style="font-family:monospace;font-size:10px">${a.time}</td>
+        <td><span class="bh ${a.confidence==='HIGH'?'H':'M'}">${a.confidence}</span></td>
+        <td style="color:#dc2626;font-weight:700">${(a.failed_logins*100).toFixed(1)}%</td>
+        <td>${(a.login_success_ratio*100).toFixed(1)}%</td>
+        <td style="color:#7c3aed;font-weight:700">${a.combined_score.toFixed(3)}</td>
+        <td><span class="dot2 ${a.if_label===-1?'dr':'dg'}"></span>${a.if_label===-1?'Anomaly':'Normal'}</td>
+        <td><span class="dot2 ${a.lof_label===-1?'dr':'dg'}"></span>${a.lof_label===-1?'Anomaly':'Normal'}</td>
+      </tr>`).join('');
+  });
+</script>
+</body>
+</html>

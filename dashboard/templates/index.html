@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOC — Anomaly Detection</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --s1: #1e293b;
+      --s2: #1e293b;
+      --bdr: rgba(255, 255, 255, 0.07);
+      --bdr2: rgba(255, 255, 255, 0.12);
+      --txt: #dde1ea;
+      --muted: #4a5568;
+      --accent: #3b82f6;
+      --red: #ff4757;
+      --orange: #ff8c42;
+      --green: #00e676;
+      --purple: #b388ff;
+      --yellow: #ffd740;
+    }
+
+    [data-theme="light"] {
+      --bg: #d1d9e0;
+      --s1: #dde3ea;
+      --s2: #c8d0d8;
+      --bdr: rgba(0, 0, 0, 0.06);
+      --bdr2: rgba(0, 0, 0, 0.12);
+      --txt: #1a1d2e;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --red: #e53935;
+      --orange: #f4511e;
+      --green: #00c853;
+      --purple: #7c4dff;
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+
+    /* ── NAV ── */
+    nav {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: var(--s1);
+      border-bottom: 1px solid var(--bdr2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-l {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--s2);
+      border: 1px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    .nav-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .nav-title em {
+      color: var(--accent);
+      font-style: normal;
+    }
+
+    .nav-r {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .live-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(0, 230, 118, 0.08);
+      border: 1px solid rgba(0, 230, 118, 0.2);
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      color: var(--green);
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: blink 1.5s ease-in-out infinite;
+      box-shadow: 0 0 6px var(--green);
+    }
+
+
+
+    .timer-pill {
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--s2);
+      border: 1px solid var(--bdr2);
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .tbtn {
+      background: var(--s2);
+      border: 1px solid var(--bdr2);
+      color: var(--txt);
+      padding: 6px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 11px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+
+    .tbtn:hover {
+      background: var(--bdr2);
+    }
+
+    /* ── LAYOUT ── */
+    .page {
+      padding: 20px 24px 48px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* ── SECTION HEAD ── */
+    .sh {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: none;
+      color: var(--text);
+      margin: 24px 0 12px;
+    }
+
+    .sh::before {
+      content: '';
+      display: inline-block;
+      width: 3px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    /* ── STAT CARDS ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .sc {
+      background: var(--s1);
+      border: 1px solid var(--bdr);
+      border-radius: 12px;
+      padding: 18px 16px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+
+    .sc:hover {
+      transform: translateY(-2px);
+    }
+
+    .sc::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--c, var(--accent));
+      box-shadow: none;
+    }
+
+    .sc .v {
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 1;
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 5px;
+      color: var(--c, var(--accent));
+    }
+
+    .sc .l {
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 600;
+    }
+
+    .sc .s {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 5px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ── STATUS PANEL ── */
+    .status-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .si {
+      flex: 1;
+      min-width: 140px;
+      background: var(--s1);
+      border: 1px solid var(--bdr);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: border-color 0.3s;
+    }
+
+    .si.on {
+      border-color: rgba(0, 230, 118, 0.2);
+    }
+
+    .si.off {
+      border-color: rgba(255, 71, 87, 0.2);
+    }
+
+    .sdot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--muted);
+    }
+
+
+    .sl {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .ss {
+      font-size: 9px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      margin-top: 1px;
+    }
+
+    /* ── ACTION PANEL ── */
+    .ap {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      background: var(--s1);
+      border: 1px solid var(--bdr2);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .ab {
+      padding: 18px 16px;
+      border-right: 1px solid var(--bdr);
+    }
+
+    .ab:last-child {
+      border-right: none;
+    }
+
+    .ab h4 {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 9px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    .btn:last-child {
+      margin-bottom: 0;
+    }
+
+    .btn:hover {
+      filter: brightness(1.12);
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+
+    .b-blue {
+      background: rgba(0, 212, 255, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+    }
+
+    .b-green {
+      background: rgba(0, 230, 118, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(0, 230, 118, 0.25);
+    }
+
+    .b-ora {
+      background: rgba(255, 140, 66, 0.12);
+      color: var(--orange);
+      border: 1px solid rgba(255, 140, 66, 0.25);
+    }
+
+    .b-gray {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      border: 1px solid var(--bdr);
+    }
+
+    .sbox {
+      margin-top: 8px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-family: 'Space Mono', monospace;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--bdr);
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.4;
+      transition: all 0.2s;
+    }
+
+    .sbox.ok {
+      color: var(--green);
+      border-color: rgba(0, 230, 118, 0.2);
+      background: rgba(0, 230, 118, 0.04);
+    }
+
+    .sbox.err {
+      color: var(--red);
+      border-color: rgba(255, 71, 87, 0.2);
+      background: rgba(255, 71, 87, 0.04);
+    }
+
+    .sbox.run {
+      color: var(--accent);
+      border-color: rgba(0, 212, 255, 0.2);
+      background: rgba(0, 212, 255, 0.04);
+    }
+
+    /* ── CHARTS ── */
+    .cc {
+      background: var(--s1);
+      border: 1px solid var(--bdr);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .ct {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ct::before {
+      content: '';
+      width: 3px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .g2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .leg {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .li {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .ld {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    /* ── TABLE ── */
+    .tc {
+      background: var(--s1);
+      border: 1px solid var(--bdr);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .th2 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 18px 0;
+    }
+
+    .tw {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    thead th {
+      background: var(--s2);
+      color: var(--muted);
+      padding: 9px 14px;
+      text-align: left;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      border-bottom: 1px solid var(--bdr);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--bdr);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover {
+      background: rgba(0, 212, 255, 0.03);
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .bh {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .bh.H {
+      background: rgba(255, 71, 87, 0.1);
+      color: var(--red);
+      border: 1px solid rgba(255, 71, 87, 0.25);
+    }
+
+    .bh.M {
+      background: rgba(255, 140, 66, 0.1);
+      color: var(--orange);
+      border: 1px solid rgba(255, 140, 66, 0.25);
+    }
+
+    .dot2 {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+
+    .dr {
+      background: var(--red);
+    }
+
+    .dg {
+      background: var(--green);
+    }
+
+    .acnt {
+      background: rgba(0, 212, 255, 0.08);
+      border: 1px solid rgba(0, 212, 255, 0.15);
+      color: var(--accent);
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ── MODAL ── */
+    .mo {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mo.on {
+      display: flex;
+    }
+
+    .md {
+      background: var(--s1);
+      border: 1px solid var(--bdr2);
+      border-radius: 16px;
+      padding: 26px;
+      width: 600px;
+      max-width: 95vw;
+      max-height: 88vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 212, 255, 0.05);
+    }
+
+    .mc {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: var(--s2);
+      border: 1px solid var(--bdr2);
+      color: var(--muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+
+    .mc:hover {
+      color: var(--txt);
+      background: var(--bdr2);
+    }
+
+    .mt {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .dg2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .di {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--bdr);
+      border-radius: 8px;
+      padding: 11px 13px;
+      transition: border-color 0.2s;
+    }
+
+    .di:hover {
+      border-color: rgba(0, 212, 255, 0.2);
+    }
+
+    .dl {
+      font-size: 8px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 5px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .dv {
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .ib {
+      margin-top: 10px;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 11px;
+      line-height: 1.6;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .ib.bl {
+      background: rgba(0, 212, 255, 0.04);
+      border: 1px solid rgba(0, 212, 255, 0.15);
+    }
+
+    .ib.rd {
+      background: rgba(255, 71, 87, 0.04);
+      border: 1px solid rgba(255, 71, 87, 0.15);
+    }
+
+    .il {
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 5px;
+    }
+
+    /* ── SPINNER ── */
+    .spin {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: rot 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes rot {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 16px;
+      color: var(--muted);
+      font-size: 9px;
+      border-top: 1px solid var(--bdr);
+      margin-top: 40px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 1px;
+    }
+
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .navbar {
+        position: relative !important;
+      }
+
+      .status-box,
+      .btn,
+      .vsep {
+        display: none !important;
+      }
+
+      .control-panel {
+        display: none !important;
+      }
+
+      .container {
+        padding: 10px !important;
+      }
+
+      .chart-card,
+      .cc,
+      .table-card,
+      .tc {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      body {
+        background: white !important;
+        color: black !important;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bdr2);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <div class="nav-l">
+      <div class="nav-logo">🛡</div>
+      <div>
+        <div class="nav-title">SOC <em>Anomaly</em> Detection</div>
+      </div>
+    </div>
+    <div class="nav-r">
+      <div class="live-pill">
+        <div class="live-dot"></div>LIVE
+      </div>
+      <div class="timer-pill">refresh <span id="countdown">60</span>s // <span id="last-updated">--</span></div>
+      <button class="tbtn" onclick="toggleTheme()">◐</button>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <!-- STATS -->
+    <div class="sh">Overview</div>
+    <div class="stats">
+      <div class="sc" style="--c:var(--red)">
+        <div class="v" id="s-high">--</div>
+        <div class="l">High Alerts</div>
+        <div class="s">Both models flagged</div>
+      </div>
+      <div class="sc" style="--c:var(--orange)">
+        <div class="v" id="s-medium">--</div>
+        <div class="l">Medium Alerts</div>
+        <div class="s">One model flagged</div>
+      </div>
+      <div class="sc" style="--c:var(--green)">
+        <div class="v" id="s-normal">--</div>
+        <div class="l">Normal Windows</div>
+        <div class="s">No anomaly</div>
+      </div>
+      <div class="sc" style="--c:var(--accent)">
+        <div class="v" id="s-total">--</div>
+        <div class="l">Total Windows</div>
+        <div class="s">1 min = 1 window</div>
+      </div>
+      <div class="sc" style="--c:var(--purple)">
+        <div class="v" id="s-rate">--</div>
+        <div class="l">Detection Rate</div>
+        <div class="s" id="s-detected">--</div>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="sh">Actions</div>
+    <div class="ap">
+      <div class="ab">
+        <h4>📥 Collect Logs</h4>
+        <button class="btn b-blue" id="btn-collect" onclick="triggerCollect()">Start Collection</button>
+        <div class="sbox" id="collect-status">Ready</div>
+      </div>
+      <div class="ab">
+        <h4>🧠 Retrain Models</h4>
+        <button class="btn b-green" id="btn-retrain" onclick="triggerRetrain()">Retrain</button>
+        <div class="sbox" id="retrain-status">Ready</div>
+      </div>
+      <div class="ab">
+        <h4>📤 Splunk Forward</h4>
+        <button class="btn b-ora" id="btn-splunk" onclick="triggerSplunk()">Forward to Splunk</button>
+        <div class="sbox" id="splunk-status">Ready</div>
+      </div>
+      <div class="ab">
+        <h4>📊 Export</h4>
+        <button class="btn b-gray" onclick="exportCSV()">Download CSV</button>
+        <button class="btn b-gray" onclick="window.open('/print','_blank')">Print PDF</button>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="sh">Anomaly Score Timeline</div>
+    <div class="cc">
+      <div class="ct">Anomaly Score per Minute Window</div>
+      <div class="leg">
+        <div class="li">
+          <div class="ld" style="background:var(--red)"></div>HIGH
+        </div>
+        <div class="li">
+          <div class="ld" style="background:var(--orange)"></div>MEDIUM
+        </div>
+        <div class="li">
+          <div class="ld" style="background:var(--green)"></div>Normal
+        </div>
+      </div>
+      <div id="chart-timeline" style="height:300px;"></div>
+    </div>
+
+    <!-- LOGIN + PIE -->
+    <div class="sh">Login Activity</div>
+    <div class="g2">
+      <div class="cc">
+        <div class="ct">Login Timeline — Hourly</div>
+        <div id="chart-login-timeline" style="height:250px;"></div>
+      </div>
+      <div class="cc">
+        <div class="ct">Confidence Distribution</div>
+        <div id="chart-pie" style="height:250px;"></div>
+      </div>
+    </div>
+
+    <!-- ATTACK INDICATORS -->
+    <div class="sh">Attack Indicators</div>
+    <div class="g2" style="margin-bottom:10px;">
+      <div class="cc">
+        <div class="ct">Failed Logins — Event 4625</div>
+        <div id="chart-failed" style="height:230px;"></div>
+      </div>
+      <div class="cc">
+        <div class="ct">Process Creation — Event 4688</div>
+        <div id="chart-process" style="height:230px;"></div>
+      </div>
+    </div>
+
+    <!-- EVENT BREAKDOWN -->
+    <div class="sh">Event ID Breakdown</div>
+    <div class="cc" style="margin-bottom:10px;">
+      <div class="ct">Security Event Count by Type</div>
+      <div id="chart-events" style="height:260px;margin-top:8px;"></div>
+    </div>
+
+    <!-- ALERT TABLE -->
+    <div class="sh">Anomaly Alert Log</div>
+    <div class="tc">
+      <div class="th2">
+        <div class="ct" style="margin-bottom:12px;">All Detected Anomalies <span
+            style="font-size:10px;color:var(--muted);font-weight:400">// click row for details</span></div>
+        <span class="acnt" id="alert-count">--</span>
+      </div>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Time Window</th>
+              <th>Confidence</th>
+              <th>Failed Logins</th>
+              <th>Login Success</th>
+              <th>Process</th>
+              <th>Score</th>
+              <th>IF Model</th>
+              <th>LOF Model</th>
+            </tr>
+          </thead>
+          <tbody id="alerts-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>AI-Powered Log Anomaly Detection // Tushar Kumar Swami (Wolf) // BCA Final Year // DSEU 2026</footer>
+
+  <!-- MODAL -->
+  <div class="mo" id="detail-modal">
+    <div class="md">
+      <button class="mc" onclick="closeModal()">✕</button>
+      <div class="mt">🔍 Alert Details</div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const h = document.documentElement;
+      h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      renderAll();
+    }
+    const D = () => document.documentElement.getAttribute('data-theme') === 'dark';
+
+    function L(ex = {}) {
+      const d = D();
+      return {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: d ? '#07090f' : '#ffffff',
+        font: { color: d ? '#dde1ea' : '#1a1d2e', size: 10, family: 'Space Mono, monospace' },
+        xaxis: { gridcolor: d ? 'rgba(255,255,255,0.04)' : '#f1f5f9', zerolinecolor: d ? 'rgba(255,255,255,0.06)' : '#e2e8f0', linecolor: d ? 'rgba(255,255,255,0.06)' : '#e2e8f0', tickcolor: d ? '#4a5568' : '#94a3b8' },
+        yaxis: { gridcolor: d ? 'rgba(255,255,255,0.04)' : '#f1f5f9', zerolinecolor: d ? 'rgba(255,255,255,0.06)' : '#e2e8f0', linecolor: d ? 'rgba(255,255,255,0.06)' : '#e2e8f0', tickcolor: d ? '#4a5568' : '#94a3b8', rangemode: 'tozero' },
+        margin: { t: 20, r: 16, b: 48, l: 58 }, showlegend: false, ...ex
+      };
+    }
+
+    const C = { responsive: true, scrollZoom: true, displayModeBar: true, modeBarButtonsToRemove: ['select2d', 'lasso2d', 'toggleSpikelines'], displaylogo: false };
+
+    let cd = 60;
+    setInterval(() => { cd--; document.getElementById('countdown').textContent = cd; if (cd <= 0) { cd = 60; renderAll(); } }, 1000);
+
+    function closeModal() { document.getElementById('detail-modal').classList.remove('on'); }
+    window.addEventListener('click', e => { if (e.target.id === 'detail-modal') closeModal(); });
+
+    function ss(id, msg, type = 'run') {
+      const b = document.getElementById(id);
+      b.className = 'sbox' + (type === 'ok' ? ' ok' : type === 'err' ? ' err' : type === 'run' ? ' run' : '');
+      b.innerHTML = type === 'run' ? `<span class="spin"></span>${msg}` : msg;
+    }
+
+    function loadSummary() {
+      fetch('/api/summary').then(r => r.json()).then(d => {
+        document.getElementById('s-high').textContent = d.high;
+        document.getElementById('s-medium').textContent = d.medium;
+        document.getElementById('s-normal').textContent = d.normal;
+        document.getElementById('s-total').textContent = d.total;
+        document.getElementById('s-rate').textContent = d.detection_rate + '%';
+        document.getElementById('s-detected').textContent = d.detected + ' anomalies from ' + d.total + ' windows';
+        document.getElementById('last-updated').textContent = d.last_updated;
+        Plotly.react('chart-pie', [{
+          values: [d.high, d.medium, d.normal], labels: ['HIGH', 'MED', 'NORMAL'],
+          type: 'pie', hole: 0.58,
+          marker: { colors: ['#ff4757', '#ff8c42', '#00e676'] },
+          textinfo: 'label+percent',
+          textfont: { family: 'Space Mono', size: 10 },
+          hovertemplate: '%{label}: %{value}<extra></extra>'
+        }], { ...L(), margin: { t: 10, r: 10, b: 28, l: 10 }, showlegend: false }, C);
+      });
+    }
+
+    function loadCharts() {
+      fetch('/api/timeline').then(r => r.json()).then(data => {
+        const T = data.map(d => new Date(d.time));
+        const S = data.map(d => d.combined_score);
+        const P = data.map(d => d.process_events);
+        const col = data.map(d => d.confidence === 'HIGH' ? '#ff4757' : d.confidence === 'MEDIUM' ? '#ff8c42' : '#00e676');
+        const lbl = data.map(d => d.confidence);
+        const mn = Math.min(...S), mx = Math.max(...S), pd = (mx - mn) * 0.18;
+
+        Plotly.react('chart-timeline', [
+          { x: T, y: S, type: 'scatter', mode: 'lines', line: { color: 'rgba(0,212,255,0.08)', width: 1 }, hoverinfo: 'skip' },
+          {
+            x: T, y: S, type: 'scatter', mode: 'markers',
+            marker: { color: col, size: 8, line: { width: 1.5, color: D() ? '#07090f' : '#fff' } },
+            text: lbl, hovertemplate: '<b>%{x|%b %d %H:%M}</b><br>Score: %{y:.4f}<br>%{text}<extra></extra>'
+          }
+        ], {
+          ...L(),
+          xaxis: { ...L().xaxis, type: 'date', tickformat: '%b %d', title: { text: 'Date', standoff: 8 }, rangeslider: { visible: true, thickness: 0.06 } },
+          yaxis: {
+            ...L().yaxis, title: { text: 'Anomaly Score' }, range: [mn - pd, mx + pd], rangemode: 'normal',
+            zeroline: true, zerolinecolor: D() ? 'rgba(0,212,255,0.25)' : 'rgba(0,119,255,0.25)', zerolinewidth: 1.5
+          },
+          dragmode: 'zoom'
+        }, C);
+
+        Plotly.react('chart-process', [{
+          x: T, y: P.map(v => +(v * 100).toFixed(1)), type: 'bar',
+          marker: { color: 'rgba(179,136,255,0.6)', line: { color: '#b388ff', width: 0.5 } },
+          hovertemplate: '<b>%{x|%b %d %H:%M}</b><br>%{y}%<extra></extra>'
+        }], {
+          ...L(),
+          xaxis: { ...L().xaxis, type: 'date', tickformat: '%b %d' },
+          yaxis: { ...L().yaxis, title: { text: 'Activity (%)' }, ticksuffix: '%' },
+          bargap: 0.15
+        }, C);
+      });
+
+      fetch('/api/login_timeline').then(r => r.json()).then(data => {
+        if (!data.length) return;
+        const H = data.map(d => new Date(d.hour));
+        const F = data.map(d => d.failed);
+        const S2 = data.map(d => d.success);
+
+        Plotly.react('chart-failed', [{
+          x: H, y: F, type: 'bar',
+          marker: { color: 'rgba(255,71,87,0.75)', line: { color: '#ff4757', width: 0.5 } },
+          hovertemplate: '<b>%{x|%b %d %H:%M}</b><br>Failed: %{y}<extra></extra>'
+        }], {
+          ...L(),
+          xaxis: { ...L().xaxis, type: 'date', tickformat: '%b %d' },
+          yaxis: { ...L().yaxis, title: { text: 'Events' }, tickformat: 'd' },
+          bargap: 0.15
+        }, C);
+
+        Plotly.react('chart-login-timeline', [
+          { x: H, y: S2, type: 'bar', name: 'Success', marker: { color: 'rgba(0,230,118,0.7)', line: { color: '#00e676', width: 0.5 } }, hovertemplate: '<b>%{x|%b %d %H:%M}</b><br>Success: %{y}<extra></extra>' },
+          { x: H, y: F, type: 'bar', name: 'Failed', marker: { color: 'rgba(255,71,87,0.75)', line: { color: '#ff4757', width: 0.5 } }, hovertemplate: '<b>%{x|%b %d %H:%M}</b><br>Failed: %{y}<extra></extra>' }
+        ], {
+          ...L(), barmode: 'group', showlegend: true,
+          legend: { orientation: 'h', y: 1.1, font: { color: D() ? '#dde1ea' : '#1a1d2e', family: 'Space Mono', size: 9 } },
+          xaxis: { ...L().xaxis, type: 'date', tickformat: '%b %d' },
+          yaxis: { ...L().yaxis, title: { text: 'Events' }, tickformat: 'd' },
+          bargap: 0.2
+        }, C);
+      });
+    }
+
+    function loadEventBreakdown() {
+      fetch('/api/event_breakdown').then(r => r.json()).then(data => {
+        if (!data.length) return;
+        const col = data.map(d => d.event_id === 4625 ? 'rgba(255,71,87,0.75)' : d.event_id === 4688 ? 'rgba(179,136,255,0.75)' : d.event_id === 4624 ? 'rgba(0,230,118,0.75)' : d.event_id === 4672 ? 'rgba(255,140,66,0.75)' : 'rgba(0,212,255,0.75)');
+        Plotly.react('chart-events', [{
+          x: data.map(d => d.label), y: data.map(d => d.count), type: 'bar',
+          marker: { color: col, line: { color: col, width: 0.5 } },
+          text: data.map(d => d.count.toLocaleString()), textposition: 'outside',
+          textfont: { family: 'Space Mono', size: 10 },
+          hovertemplate: '<b>%{x}</b><br>%{y} events<extra></extra>'
+        }], {
+          ...L(),
+          xaxis: { ...L().xaxis, tickangle: -10 },
+          yaxis: { ...L().yaxis, title: { text: 'Count' }, tickformat: 'd' },
+          bargap: 0.3
+        }, C);
+      });
+    }
+
+    function loadStatus() {
+      fetch('/api/status').then(r => r.json()).then(d => {
+        function dot(id, sid, state) {
+          const el = document.getElementById(id);
+          const dt = document.getElementById(sid);
+          el.className = 'si ' + (state === 'on' ? 'on' : state === 'off' ? 'off' : '');
+          dt.className = 'sdot ' + state;
+        }
+        dot('st-vm', 'd-vm', d.vm_online ? 'on' : 'off');
+        dot('st-sw', 'd-sw', d.splunk_web ? 'on' : 'off');
+        dot('st-sh', 'd-sh', d.splunk_hec ? 'on' : 'off');
+        const rl = document.getElementById('d-rl');
+        rl.className = 'sdot ' + (d.raw_logs ? 'rdy' : 'off');
+        document.getElementById('st-rl').className = 'si ' + (d.raw_logs ? 'on' : 'off');
+        document.getElementById('t-rl').textContent = d.raw_logs ? d.raw_time : 'not collected';
+        const ml = document.getElementById('d-ml');
+        ml.className = 'sdot ' + (d.model_ready ? 'rdy' : 'off');
+        document.getElementById('st-ml').className = 'si ' + (d.model_ready ? 'on' : 'off');
+        document.getElementById('t-ml').textContent = d.model_ready ? d.results_time : 'not trained';
+      });
+    }
+
+    function loadAlerts() {
+      fetch('/api/alerts').then(r => r.json()).then(alerts => {
+        document.getElementById('alert-count').textContent = alerts.length + ' anomalies';
+        const tb = document.getElementById('alerts-tbody');
+        tb.innerHTML = '';
+        alerts.forEach((a, i) => {
+          const bc = a.confidence === 'HIGH' ? 'H' : 'M';
+          const iH = a.if_label === -1 ? '<span class="dot2 dr"></span>Anomaly' : '<span class="dot2 dg"></span>Normal';
+          const lH = a.lof_label === -1 ? '<span class="dot2 dr"></span>Anomaly' : '<span class="dot2 dg"></span>Normal';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+          <td style="color:var(--muted)">${i + 1}</td>
+          <td>${a.time}</td>
+          <td><span class="bh ${bc}">${a.confidence}</span></td>
+          <td style="color:var(--red);font-weight:700">${(a.failed_logins * 100).toFixed(1)}%</td>
+          <td>${(a.login_success_ratio * 100).toFixed(1)}%</td>
+          <td>${(a.process_events * 100).toFixed(1)}%</td>
+          <td style="color:var(--purple);font-weight:700">${a.combined_score.toFixed(3)}</td>
+          <td>${iH}</td><td>${lH}</td>`;
+          tr.addEventListener('click', () => openDetail(a.time));
+          tb.appendChild(tr);
+        });
+      });
+    }
+
+    function openDetail(time) {
+      fetch(`/api/alert/${encodeURIComponent(time)}`).then(r => r.json()).then(d => {
+        const cc = d.confidence === 'HIGH' ? 'var(--red)' : d.confidence === 'MEDIUM' ? 'var(--orange)' : 'var(--green)';
+        document.getElementById('modal-body').innerHTML = `
+        <div class="dg2">
+          <div class="di"><div class="dl">Time Window</div><div class="dv" style="font-size:11px">${d.time}</div></div>
+          <div class="di"><div class="dl">Confidence</div><div class="dv" style="color:${cc}">${d.confidence}</div></div>
+          <div class="di"><div class="dl">Anomaly Score</div><div class="dv" style="color:var(--purple)">${d.combined_score.toFixed(4)}</div></div>
+          <div class="di"><div class="dl">Models Flagged</div><div class="dv">${d.models_flagged} / 2</div></div>
+          <div class="di"><div class="dl">Failed Logins (4625)</div><div class="dv" style="color:var(--red)">${(d.failed_logins * 100).toFixed(1)}%</div></div>
+          <div class="di"><div class="dl">Login Success Ratio</div><div class="dv">${(d.login_success_ratio * 100).toFixed(1)}%</div></div>
+          <div class="di"><div class="dl">Process Events (4688)</div><div class="dv">${(d.process_events * 100).toFixed(1)}%</div></div>
+          <div class="di"><div class="dl">Privilege Events (4672)</div><div class="dv">${(d.priv_events * 100).toFixed(1)}%</div></div>
+          <div class="di"><div class="dl">Isolation Forest</div><div class="dv" style="color:${d.if_label === -1 ? 'var(--red)' : 'var(--green)'}">${d.if_label === -1 ? 'ANOMALY' : 'NORMAL'}</div></div>
+          <div class="di"><div class="dl">LOF Model</div><div class="dv" style="color:${d.lof_label === -1 ? 'var(--red)' : 'var(--green)'}">${d.lof_label === -1 ? 'ANOMALY' : 'NORMAL'}</div></div>
+          <div class="di"><div class="dl">Attacker IP</div><div class="dv" style="font-size:12px;color:var(--red)">${d.attacker_ip}</div></div>
+          <div class="di"><div class="dl">Victim IP</div><div class="dv" style="font-size:12px;color:var(--orange)">${d.victim_ip}</div></div>
+        </div>
+        <div class="ib bl"><div class="il" style="color:var(--accent)">MITRE ATT&CK</div>${d.mitre_technique}</div>
+        <div class="ib rd"><div class="il" style="color:var(--red)">Recommended Action</div>${d.recommended_action}</div>`;
+        document.getElementById('detail-modal').classList.add('on');
+      });
+    }
+
+    function triggerCollect() {
+      const b = document.getElementById('btn-collect');
+      b.disabled = true; b.innerHTML = '<span class="spin"></span> Collecting...';
+      ss('collect-status', 'Connecting to VM...', 'run');
+      fetch('/api/collect', { method: 'POST' }).then(() => {
+        const p = setInterval(() => {
+          fetch('/api/collect/status').then(r => r.json()).then(s => {
+            ss('collect-status', s.message, 'run');
+            if (!s.running) {
+              clearInterval(p); b.disabled = false; b.innerHTML = 'Start Collection';
+              const t = s.message.toLowerCase().includes('error') || s.message.toLowerCase().includes('fail') || s.message.toLowerCase().includes('timed') ? 'err' : 'ok';
+              ss('collect-status', s.message, t);
+              if (t === 'ok') { loadStatus(); loadEventBreakdown(); }
+            }
+          });
+        }, 2000);
+      });
+    }
+
+    function triggerRetrain() {
+      const b = document.getElementById('btn-retrain');
+      b.disabled = true; b.innerHTML = '<span class="spin"></span> Retraining...';
+      ss('retrain-status', 'Starting IF + LOF pipeline...', 'run');
+      fetch('/api/retrain', { method: 'POST' }).then(() => {
+        const p = setInterval(() => {
+          fetch('/api/retrain/status').then(r => r.json()).then(s => {
+            ss('retrain-status', s.message, 'run');
+            if (!s.running) {
+              clearInterval(p); b.disabled = false; b.innerHTML = 'Retrain';
+              const t = s.message.toLowerCase().includes('error') || s.message.toLowerCase().includes('fail') ? 'err' : 'ok';
+              ss('retrain-status', s.message, t);
+              if (t === 'ok') cd = 3;
+            }
+          });
+        }, 3000);
+      });
+    }
+
+    function triggerSplunk() {
+      const b = document.getElementById('btn-splunk');
+      b.disabled = true; b.innerHTML = '<span class="spin"></span> Forwarding...';
+      ss('splunk-status', 'Connecting to HEC...', 'run');
+      fetch('/api/splunk', { method: 'POST' }).then(() => {
+        const p = setInterval(() => {
+          fetch('/api/splunk/status').then(r => r.json()).then(s => {
+            ss('splunk-status', s.message, 'run');
+            if (!s.running) {
+              clearInterval(p); b.disabled = false; b.innerHTML = 'Forward to Splunk';
+              const t = s.message.toLowerCase().includes('error') || s.message.toLowerCase().includes('fail') || s.message.toLowerCase().includes('timed') ? 'err' : 'ok';
+              ss('splunk-status', s.message, t);
+            }
+          });
+        }, 2000);
+      });
+    }
+
+    function exportCSV() { window.location.href = '/api/export/csv'; }
+
+    function renderAll() { loadSummary(); loadCharts(); loadAlerts(); loadStatus(); loadEventBreakdown(); }
+    renderAll();
+  </script>
+</body>
+
+</html>
