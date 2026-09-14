@@ -12,7 +12,7 @@ EVENT_IDS = [4624, 4625, 4634, 4672, 4688, 4698, 4720]
 # Splunk HEC config (fill after HEC token setup)
 SPLUNK_HOST  = "192.168.56.101"
 SPLUNK_PORT  = 8088
-SPLUNK_TOKEN = os.getenv("ea99cd86-5243-4016-8b4c-452fa9eb5847")
+SPLUNK_TOKEN = os.getenv("SPLUNK_TOKEN")
 
 # ML config
 CONTAMINATION = 0.15  # Expected 5% anomaly rate

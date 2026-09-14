@@ -76,31 +76,29 @@ Local Outlier Factor (LOF) evaluates the local density of observations to identi
 
 ## Workflow
 
-```
+## Workflow
+
+```text
 Windows Event Logs
         │
         ▼
    Log Collection
         │
         ▼
-Feature Engineering
+ Feature Engineering
         │
         ▼
-Machine Learning
- ┌──────┴────────┐
- │               │
- ▼               ▼
-Isolation       LOF
+ Anomaly Detection
+   ┌────┴────┐
+   ▼         ▼
+Isolation    LOF
  Forest
- │               │
- └──────┬────────┘
+   └────┬────┘
         ▼
  Anomaly Results
-        │
-        ├──────────────► Flask Dashboard
-        │
-        └──────────────► Splunk
-```
+   ┌────┴──────────┐
+   ▼               ▼
+Flask Dashboard   Splunk
 
 ## Configuration
 
@@ -114,7 +112,7 @@ SPLUNK_TOKEN=your-splunk-hec-token
 
 The `.env` file is excluded from Git using `.gitignore`.
 
-## Running the Project
+## Running the Projectgit status
 
 Clone the repository:
 
