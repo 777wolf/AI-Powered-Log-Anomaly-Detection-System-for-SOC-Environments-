@@ -21,6 +21,7 @@ Thumbs.db
 
 # Generated data
 *.csv
+!data/known_attacks.csv
 
 # Testing/cache
 .pytest_cache/

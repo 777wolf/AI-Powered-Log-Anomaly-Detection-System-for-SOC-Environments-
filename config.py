@@ -18,6 +18,10 @@ SPLUNK_HOST  = "192.168.56.101"
 SPLUNK_PORT  = 8088
 SPLUNK_TOKEN = os.getenv("SPLUNK_TOKEN")
 
+# Windows VM credentials
+VM_USERNAME = os.getenv("VM_USERNAME")
+VM_PASSWORD = os.getenv("VM_PASSWORD")
+
 # ML config
 CONTAMINATION = 0.15  # Expected 15% anomaly rate
 RANDOM_STATE = 42

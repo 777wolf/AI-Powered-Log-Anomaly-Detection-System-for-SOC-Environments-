@@ -182,18 +182,14 @@ def show_results(df):
         print(medium[cols].to_string(index=False))
 
     # Validation: check overlap with known attack windows
-    # These are windows we KNOW had attack activity (from Phase 2)
-    known_attack_windows = [
-        '2026-03-01 17:10:00', '2026-03-01 17:19:00',
-        '2026-03-01 17:20:00', '2026-03-01 17:21:00',
-        '2026-03-01 17:22:00', '2026-03-02 13:19:00',
-        '2026-04-16 08:24:00', '2026-04-16 08:25:00',
-        '2026-04-16 08:28:00', '2026-04-16 08:36:00',
-        '2026-04-16 08:37:00', '2026-04-16 08:38:00',
-        '2026-04-18 11:31:00', '2026-04-18 11:55:00',
-        '2026-04-18 11:56:00',
-    ]
+    # Ground-truth labels are stored separately from the detection logic
+    KNOWN_ATTACKS_FILE = os.path.join(DATA_PATH, "known_attacks.csv")
 
+    known_attack_windows = (
+        pd.read_csv(KNOWN_ATTACKS_FILE)["time_window"]
+        .astype(str)
+        .tolist()
+    )
     print("\n[*] Validation against known attack windows:")
     print("-"*60)
     detected_attacks = df[

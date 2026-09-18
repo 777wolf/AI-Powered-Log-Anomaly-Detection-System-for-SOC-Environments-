@@ -187,7 +187,7 @@ The project was developed using a virtualized cybersecurity lab containing:
 The complete architecture shows the relationship between attack simulation, Windows logs, WMI collection, feature engineering, machine-learning detection, Flask visualization, and Splunk.
 
 **Screenshot:**
-![alt text](<System Architecture.jpg>)
+![alt text](<Screenshots/System Architecture.jpg>)
 
 ---
 
@@ -196,7 +196,7 @@ The complete architecture shows the relationship between attack simulation, Wind
 The lab network contains the Windows host, Windows 10 victim VM, Kali Linux attack VM, and Ubuntu Splunk VM.
 
 **Screenshot:**
-![alt text](<Network Topology.jpg>)
+![alt text](<Screenshots/Network Topology.jpg>)
 
 ---
 
@@ -205,7 +205,7 @@ The lab network contains the Windows host, Windows 10 victim VM, Kali Linux atta
 The data-flow diagram illustrates the movement of security logs from collection through feature engineering and machine-learning detection to the dashboard and Splunk.
 
 **Screenshot:**
-![alt text](<System Data Flow Diagram.jpg>)
+![alt text](<Screenshots/System Data Flow Diagram.jpg>)
 ---
 
 ## 4. System Flowchart
@@ -213,7 +213,7 @@ The data-flow diagram illustrates the movement of security logs from collection 
 The flowchart represents the detection process from log collection through anomaly classification and alert output.
 
 **Screenshot:**
-![alt text](<System Flowchart.jpg>)
+![alt text](<Screenshots/System Flowchart.jpg>)
 ---
 
 ## 5. Flask SOC Dashboard
@@ -221,7 +221,7 @@ The flowchart represents the detection process from log collection through anoma
 The dashboard provides an SOC-style overview of detected anomalies, model results, system status, and available actions.
 
 **Screenshot:**
-![alt text](<SOC Dashboard.jpg>)
+![alt text](<Screenshots/SOC Dashboard.jpg>)
 ---
 
 ## 6. Alert Log Table
@@ -229,7 +229,7 @@ The dashboard provides an SOC-style overview of detected anomalies, model result
 The alert table displays individual detected anomalies with timestamps, risk levels, model scores, security features, and anomaly status.
 
 **Screenshot:**
-![alt text](<AlertLog Table.jpg>)
+![alt text](<Screenshots/AlertLog Table.jpg>)
 ---
 
 ## 7. Anomaly Score Timeline
@@ -237,7 +237,7 @@ The alert table displays individual detected anomalies with timestamps, risk lev
 The anomaly score timeline visualizes anomaly scores across one-minute activity windows.
 
 **Screenshot:**
-![alt text](<Anomaly Score Timeline Chart.jpg>)
+![alt text](<Screenshots/Anomaly Score Timeline Chart.jpg>)
 ---
 
 ## 8. Failed Login Activity
@@ -245,7 +245,7 @@ The anomaly score timeline visualizes anomaly scores across one-minute activity 
 Event ID `4625` represents failed login activity and is monitored as an important indicator of brute-force or password-spraying behavior.
 
 **Screenshot:**
-![alt text](<Failed Login Rate Bar Chart.jpg>)
+![alt text](<Screenshots/Failed Login Rate Bar Chart.jpg>)
 ---
 
 ## 9. Login Activity — Success vs Failed
@@ -253,7 +253,7 @@ Event ID `4625` represents failed login activity and is monitored as an importan
 This visualization compares successful and failed authentication activity over time.
 
 **Screenshot:**
-![alt text](<Login Timeline-SuccessVsFailed.jpg>)
+![alt text](<Screenshots/Login Timeline-SuccessVsFailed.jpg>)
 ---
 
 ## 10. Security Event Distribution
@@ -261,7 +261,7 @@ This visualization compares successful and failed authentication activity over t
 The event distribution chart provides an overview of monitored Windows Security Event IDs.
 
 **Screenshot:**
-![alt text](<Event ID Chart.jpg>)
+![alt text](<Screenshots/Event ID Chart.jpg>)
 ---
 
 ## 11. Model Agreement
@@ -269,8 +269,8 @@ The event distribution chart provides an overview of monitored Windows Security 
 The model agreement visualization shows whether anomalies were detected by Isolation Forest, LOF, or both models.
 
 **Screenshot:**
-![alt text](<Splunk Model Agreement Distribution.jpg>)
-![alt text](<Splunk HEC — Anomaly Alert Events Received.jpg>)
+![alt text](<Screenshots/Splunk Model Agreement Distribution.jpg>)
+![alt text](<Screenshots/Splunk HEC — Anomaly Alert Events Received.jpg>)
 ---
 
 # Security Events Monitored
@@ -511,29 +511,31 @@ LogAnomalyDetect/
 │   └── anomaly_results.png
 │
 ├── scripts/
-│   ├── anomaly_detection.py
-│   ├── feature_engineering.py
-│   ├── log_collector.py
-│   ├── splunk_forwarder.py
-│   └── tune_model.py
+│   |── anomaly_detection.py
+    ├── feature_engineering.py
+    ├── log_collector.py
+    ├── run_pipeline.py
+    ├── splunk_forwarder.py
+    └── tune_model.py
 │
 ├── Screenshots/
-│   ├── System-Architecture.jpg
-│   ├── Network-Topology.jpg
-│   ├── System-Data-Flow-Diagram.png
-│   ├── System-Flowchart.png
-│   ├── SOC-Dashboard.jpg
-│   ├── Alert-Log-Table.jpg
-│   ├── Anomaly-Score-Timeline-Chart.jpg
-│   ├── Failed-Login-Rate-Bar-Chart.jpg
-│   ├── Login-Timeline-SuccessVsFailed.jpg
-│   ├── Event-ID-Chart.png
-│   └── Splunk-Model-Agreement-Distribution.png
+│   ├── System Architecture.jpg
+│   ├── Network Topology.jpg
+│   ├── System Data Flow Diagram.jpg
+│   ├── System Flowchart.jpg
+│   ├── SOC Dashboard.jpg
+│   ├── AlertLog Table.jpg
+│   ├── Anomaly Score Timeline Chart.jpg
+│   ├── Failed Login Rate Bar Chart.jpg
+│   ├── Login Timeline-SuccessVsFailed.jpg
+│   ├── Event ID Chart.jpg
+│   ├── Splunk Model Agreement Distribution.jpg
+│   └── Splunk HEC — Anomaly Alert Events Received.jpg
 │
 ├── config.py
 ├── requirements.txt
 ├── .gitignore
-└── README.md
+├── README.md
 ```
 
 ---

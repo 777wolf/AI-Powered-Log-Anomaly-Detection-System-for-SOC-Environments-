@@ -12,19 +12,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import DATA_PATH, MODEL_PATH, RANDOM_STATE
 
 # Known attack windows from Phase 2 (ground truth)
-KNOWN_ATTACKS = [
-    '2026-04-22 06:14:00',
-    '2026-04-22 06:16:00',
-    '2026-04-22 06:20:00',
-    '2026-04-22 06:21:00',
-    '2026-04-24 10:38:00',
-    '2026-05-04 19:06:00',
-    '2026-05-04 19:08:00',
-    '2026-05-04 19:09:00',
-    '2026-05-04 19:31:00',
-    '2026-05-04 20:09:00',
-    '2026-05-04 20:10:00',
-]
+# Known attack windows from evaluation dataset
+KNOWN_ATTACKS_FILE = os.path.join(DATA_PATH, "known_attacks.csv")
+
+KNOWN_ATTACKS = (
+    pd.read_csv(KNOWN_ATTACKS_FILE)["time_window"]
+    .astype(str)
+    .tolist()
+)
 
 FEATURE_COLS = [
     'total_events', 'failed_logins', 'success_logins',

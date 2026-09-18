@@ -80,7 +80,7 @@ def forward_anomalies(min_confidence="MEDIUM"):
     min_confidence: "HIGH" = only high alerts
                     "MEDIUM" = high + medium alerts
     """
-    path = os.path.join(DATA_PATH, "anomaly_results_tuned.csv")
+    path = os.path.join(DATA_PATH, "anomaly_results.csv")
     df = pd.read_csv(path)
     df['time_window'] = pd.to_datetime(df['time_window'])
 

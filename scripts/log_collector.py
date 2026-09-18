@@ -8,10 +8,12 @@ import sys
 import getpass
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import EVENT_IDS, DATA_PATH
+from config import EVENT_IDS, DATA_PATH, VM_USERNAME, VM_PASSWORD
 
 
-def collect_logs_wmi(server="192.168.56.102", username=None, password=None, max_records=5000):
+def collect_logs_wmi(
+    server="192.168.56.102", username=None, password=None, max_records=5000
+):
     """
     Uses WMI (Windows Management Instrumentation) to pull Security Event Logs
     from a remote Windows machine. More reliable than OpenEventLog for remote access.
@@ -62,7 +64,7 @@ $results | ConvertTo-Csv -NoTypeInformation
             ["powershell", "-Command", ps_script],
             capture_output=True,
             text=True,
-            timeout=120
+            timeout=120,
         )
 
         if result.returncode != 0:
@@ -75,6 +77,7 @@ $results | ConvertTo-Csv -NoTypeInformation
 
         # Parse CSV output from PowerShell
         from io import StringIO
+
         df = pd.read_csv(StringIO(result.stdout))
 
         print(f"[+] Collected {len(df)} events")
@@ -105,27 +108,26 @@ $results | ConvertTo-Csv -NoTypeInformation
 if __name__ == "__main__":
     import sys
 
-    # Accept credentials as command line args (for dashboard automation)
-    # Usage: python log_collector.py <username> <password>
     if len(sys.argv) == 3:
         username = sys.argv[1]
         password = sys.argv[2]
         print(f"[*] Using credentials from arguments: {username}")
     else:
-        print("\n[*] Enter Windows 10 VM credentials:")
-        username = input("    Username: ").strip()
-        password = getpass.getpass("    Password: ")
+        username = VM_USERNAME
+        password = VM_PASSWORD
+
+        if not username or not password:
+            print("\n[*] Enter Windows 10 VM credentials:")
+            username = input("    Username: ").strip()
+            password = getpass.getpass("    Password: ")
+        else:
+            print(f"[*] Using VM credentials from environment: {username}")
 
     df = collect_logs_wmi(
-        server="192.168.56.102",
-        username=username,
-        password=password,
-        max_records=5000
+        server="192.168.56.102", username=username, password=password, max_records=5000
     )
 
     if not df.empty:
         print("\n[*] Sample of collected data:")
         print(df.head(10))
         print("\n[+] Done. Check data/raw_logs.csv")
-
-
