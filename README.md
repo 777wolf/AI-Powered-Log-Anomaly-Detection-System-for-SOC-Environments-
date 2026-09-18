@@ -1,17 +1,14 @@
-````markdown
 # AI-Powered Log Anomaly Detection System for SOC Environments
 
-> **Machine Learning + Windows Security Logs + SOC Dashboard + Splunk SIEM**
+**Machine Learning + Windows Security Logs + SOC Dashboard + Splunk SIEM**
 
 An AI/ML-based security monitoring system designed to detect anomalous activity in Windows Security Event Logs using **unsupervised machine learning**.
 
 The system collects Windows event logs through WMI, converts raw logs into security-focused time-window features, analyzes them using **Isolation Forest** and **Local Outlier Factor (LOF)**, visualizes detection results through a Flask SOC dashboard, and forwards security alerts to Splunk through HTTP Event Collector (HEC).
 
----
 
 ## SOC Detection Pipeline
 
-```text
 ┌─────────────────────┐
 │   Windows 10 VM     │
 │   Security Logs     │
@@ -53,9 +50,7 @@ The system collects Windows event logs through WMI, converts raw logs into secur
 │ Flask SOC    │ │ Splunk SIEM  │
 │ Dashboard    │ │ HEC          │
 └──────────────┘ └──────────────┘
-````
 
----
 
 # Overview
 
@@ -190,16 +185,7 @@ The project was developed using a virtualized cybersecurity lab containing:
 The complete architecture shows the relationship between attack simulation, Windows logs, WMI collection, feature engineering, machine-learning detection, Flask visualization, and Splunk.
 
 **Screenshot:**
-
-```text
-Screenshots/System Architecture.jpg
-```
-
-Add:
-
-```markdown
-![System Architecture](Screenshots/System-Architecture.jpg)
-```
+![alt text](<System Architecture.jpg>)
 
 ---
 
@@ -208,16 +194,7 @@ Add:
 The lab network contains the Windows host, Windows 10 victim VM, Kali Linux attack VM, and Ubuntu Splunk VM.
 
 **Screenshot:**
-
-```text
-[INSERT SCREENSHOT: Network Topology]
-```
-
-Add:
-
-```markdown
-![Network Topology](Screenshots/Network-Topology.jpg)
-```
+![alt text](<Network Topology.jpg>)
 
 ---
 
@@ -226,17 +203,7 @@ Add:
 The data-flow diagram illustrates the movement of security logs from collection through feature engineering and machine-learning detection to the dashboard and Splunk.
 
 **Screenshot:**
-
-```text
-[INSERT SCREENSHOT: System Data Flow Diagram]
-```
-
-Add:
-
-```markdown
-![System Data Flow](Screenshots/System-Data-Flow-Diagram.png)
-```
-
+![alt text](<System Data Flow Diagram.jpg>)
 ---
 
 ## 4. System Flowchart
@@ -244,17 +211,7 @@ Add:
 The flowchart represents the detection process from log collection through anomaly classification and alert output.
 
 **Screenshot:**
-
-```text
-[INSERT SCREENSHOT: System Flowchart]
-```
-
-Add:
-
-```markdown
-![System Flowchart](Screenshots/System-Flowchart.png)
-```
-
+![alt text](<System Flowchart.jpg>)
 ---
 
 ## 5. Flask SOC Dashboard
@@ -262,17 +219,7 @@ Add:
 The dashboard provides an SOC-style overview of detected anomalies, model results, system status, and available actions.
 
 **Screenshot:**
-
-```text
-[INSERT SCREENSHOT: SOC Dashboard]
-```
-
-Add:
-
-```markdown
-![SOC Dashboard](Screenshots/SOC-Dashboard.jpg)
-```
-
+![alt text](<SOC Dashboard.jpg>)
 ---
 
 ## 6. Alert Log Table
@@ -280,17 +227,7 @@ Add:
 The alert table displays individual detected anomalies with timestamps, risk levels, model scores, security features, and anomaly status.
 
 **Screenshot:**
-
-```text
-[INSERT SCREENSHOT: Alert Log Table]
-```
-
-Add:
-
-```markdown
-![Alert Log Table](Screenshots/Alert-Log-Table.jpg)
-```
-
+![alt text](<AlertLog Table.jpg>)
 ---
 
 ## 7. Anomaly Score Timeline
@@ -298,17 +235,7 @@ Add:
 The anomaly score timeline visualizes anomaly scores across one-minute activity windows.
 
 **Screenshot:**
-
-```text
-[INSERT SCREENSHOT: Anomaly Score Timeline]
-```
-
-Add:
-
-```markdown
-![Anomaly Score Timeline](Screenshots/Anomaly-Score-Timeline-Chart.jpg)
-```
-
+![alt text](<Anomaly Score Timeline Chart.jpg>)
 ---
 
 ## 8. Failed Login Activity
@@ -316,17 +243,7 @@ Add:
 Event ID `4625` represents failed login activity and is monitored as an important indicator of brute-force or password-spraying behavior.
 
 **Screenshot:**
-
-```text
-[INSERT SCREENSHOT: Failed Login Rate Chart]
-```
-
-Add:
-
-```markdown
-![Failed Login Rate](Screenshots/Failed-Login-Rate-Bar-Chart.jpg)
-```
-
+![alt text](<Failed Login Rate Bar Chart.jpg>)
 ---
 
 ## 9. Login Activity — Success vs Failed
@@ -334,17 +251,7 @@ Add:
 This visualization compares successful and failed authentication activity over time.
 
 **Screenshot:**
-
-```text
-[INSERT SCREENSHOT: Login Timeline]
-```
-
-Add:
-
-```markdown
-![Login Timeline](Screenshots/Login-Timeline-SuccessVsFailed.jpg)
-```
-
+![alt text](<Login Timeline-SuccessVsFailed.jpg>)
 ---
 
 ## 10. Security Event Distribution
@@ -352,17 +259,7 @@ Add:
 The event distribution chart provides an overview of monitored Windows Security Event IDs.
 
 **Screenshot:**
-
-```text
-[INSERT SCREENSHOT: Event ID Chart]
-```
-
-Add:
-
-```markdown
-![Event ID Distribution](Screenshots/Event-ID-Chart.png)
-```
-
+![alt text](<Event ID Chart.jpg>)
 ---
 
 ## 11. Model Agreement
@@ -370,17 +267,8 @@ Add:
 The model agreement visualization shows whether anomalies were detected by Isolation Forest, LOF, or both models.
 
 **Screenshot:**
-
-```text
-[INSERT SCREENSHOT: Model Agreement Distribution]
-```
-
-Add:
-
-```markdown
-![Model Agreement](Screenshots/Splunk-Model-Agreement-Distribution.png)
-```
-
+![alt text](<Splunk Model Agreement Distribution.jpg>)
+![alt text](<Splunk HEC — Anomaly Alert Events Received.jpg>)
 ---
 
 # Security Events Monitored
