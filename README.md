@@ -6,7 +6,7 @@ An AI/ML-based security monitoring system designed to detect anomalous activity 
 
 The system collects Windows event logs through WMI, converts raw logs into security-focused time-window features, analyzes them using **Isolation Forest** and **Local Outlier Factor (LOF)**, visualizes detection results through a Flask SOC dashboard, and forwards security alerts to Splunk through HTTP Event Collector (HEC).
 
-
+```text
 ## SOC Detection Pipeline
 
 ┌─────────────────────┐
@@ -50,7 +50,9 @@ The system collects Windows event logs through WMI, converts raw logs into secur
 │ Flask SOC    │ │ Splunk SIEM  │
 │ Dashboard    │ │ HEC          │
 └──────────────┘ └──────────────┘
+```
 
+---
 
 # Overview
 
@@ -853,9 +855,6 @@ Attack simulations should only be performed against systems and networks for whi
 # Author
 
 **Tushar Kumar Swami**
-
-BCA Final Year
-Delhi Skill and Entrepreneurship University (DSEU)
 
 ---
 
